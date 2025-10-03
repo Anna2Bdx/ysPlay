@@ -22,6 +22,9 @@ rootProject.allprojects {
 apply plugin: 'com.android.library'
 
 android {
+    namespace 'com.example.ys_play'
+
+    
     compileSdkVersion 29
 
     compileOptions {
