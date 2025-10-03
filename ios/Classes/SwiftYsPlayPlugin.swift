@@ -554,16 +554,16 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
      * Retourner EZVideoLevelType selon videoLevel
      */
     private func getVideoLevelType (videoLevel:Int) -> EZVideoLevelType {
-        var videolevelType:EZVideoLevelType = EZVideoLevelType.high
+        var videolevelType:EZVideoLevelType = EZVideoLevelType.levelHigh /* was high */
         switch videoLevel {
         case 0:
-            videolevelType = EZVideoLevelType.low
+            videolevelType = EZVideoLevelType.levelLow /* was low */
         case 1:
-            videolevelType = EZVideoLevelType.middle
+            videolevelType = EZVideoLevelType.levelMiddle /* was middle */
         case 2:
-            videolevelType = EZVideoLevelType.high
+            videolevelType = EZVideoLevelType.levelHigh /* was high */
         case 3:
-            videolevelType = EZVideoLevelType.superHigh
+            videolevelType = EZVideoLevelType.levelSuperHigh /* was superHigh */
         default:
             break
         }
