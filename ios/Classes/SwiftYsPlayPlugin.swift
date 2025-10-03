@@ -1,5 +1,24 @@
 //
-//  SwiftYsPlayPlugin.swift
+//  SwiftYs    let TAG = "SDK EZVIZ=======>"
+    
+    var playerView:UIView? // Vue de lecture
+ 
+    var pwResult:FlutterBasicMessageChannel? // Canal de configura        } else if call.method == "pause_play_back"{
+            /// Pause de la lecture
+            if ezPlayer == nil {
+                result(false)
+                return
+            }
+            let bool = ezPlayer!.pausePlayback()
+            print("\(TAG)Pause de la lecture \(bool ? "réussie" : "échouée")")eau
+    var ysResult:FlutterBasicMessageChannel? // Canal direct et lecture
+    
+    var ezPlayer:EZPlayer? // Lecteur direct et lecture
+    var _talkPlayer:EZPlayer? // Interphone
+    
+    private var supportTalk:Int = 0 // Capacité d'interphone 0 non supporté 1 full duplex 3 half duplex
+    private var isPhone2Dev:Int = 1 // 1 téléphone parle périphérique écoute 0 téléphone écoute périphérique parle
+    private var videoPath:String? // Adresse de sauvegarde vidéoift
 //  ys_play
 //
 //  Created by 潇洒的然然 on 2022/9/6.
@@ -26,30 +45,36 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
     private var isPhone2Dev:Int = 1 //1手机端说设备端听 0手机端听设备端说
     private var videoPath:String? //视频保存地址
     
+
+    // variables utilisées pour piloter finement le PanTiltZoom
+    private let ptzQueue = DispatchQueue(label: "fr.skywave.maison.ptz.queue")  // série
+    private var ptzEpoch: Int = 0                                               // token d'intention
+    private var currentCmd: EZPTZCommand? = nil
+
     /**
-     * 初始化
-     * 注册插件时调用，与register()方法一样，只执行一次
+     * Initialisation
+     * Appelé lors de l'enregistrement du plugin, comme la méthode register(), exécuté une seule fois
      */
     init(messenger:FlutterBinaryMessenger){
         super.init()
 
-        /// 渠道实例化
+        /// Instanciation des canaux
         pwResult = FlutterBasicMessageChannel(name: Constants.PEI_WANG_CHANNEL, binaryMessenger: messenger,
                                             codec:FlutterStandardMessageCodec.sharedInstance())
         ysResult = FlutterBasicMessageChannel(name: Constants.PLAYER_STATUS_CHANNEL, binaryMessenger: messenger, codec:
           FlutterStandardMessageCodec.sharedInstance() )
         
-        /// 接收从 [YsPlayView] 发出的通知，并获取 uiView
+        /// Recevoir les notifications envoyées depuis [YsPlayView] et obtenir l'uiView
         NotificationCenter.default.addObserver(self, selector: #selector(notificationAction), name: Notification.Name.init("video_view"), object: nil)
         
     }
     
     deinit {
-       /// 移除通知
+       /// Supprimer les notifications
        NotificationCenter.default.removeObserver(self)
     }
     
-    /// 接收到通知后的方法回调
+    /// Callback de méthode après réception de la notification
     @objc private func notificationAction(notification: Notification) {
         if notification.object != nil {
             playerView = notification.object as? UIView
@@ -58,8 +83,8 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
     
     
     /**
-     * 注册插件
-     * 程序运行时调用，且在项目周期内，只执行一次
+     * Enregistrer le plugin
+     * Appelé lors de l'exécution du programme, et exécuté une seule fois pendant le cycle de vie du projet
      */
     public static func register(with registrar: FlutterPluginRegistrar) {
 
@@ -73,34 +98,35 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
     
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        print("SwiftYsPlayPlugin: handle() called with method: \(call.method)")
         if call.method == "init_sdk" {
-            /// 初始化萤石SDK
+            /// Initialiser le SDK EZVIZ
             let data:Optional<Dictionary> = call.arguments as? Dictionary<String, String>
             if data != nil && data!["appKey"] != nil {
-                let isSuccess:Bool = EZOpenSDK.initLib(withAppKey: data!["appKey"]!)
-                print("\(TAG) SDK初始化 \(isSuccess ? "成功" : "失败")")
+                let isSuccess:Bool = EZGlobalSDK.initLib(withAppKey: data!["appKey"]!)
+                print("\(TAG) Initialisation SDK \(isSuccess ? "réussie" : "échouée")")
                 result(isSuccess)
             } else {
                 result(false)
             }
-        } else if call.method == "set_access_token" {
-            /// 登录授权
+                } else if call.method == "set_access_token" {
+            /// Autorisation de connexion
             let data:Optional<Dictionary> = call.arguments as? Dictionary<String, String>
             if data != nil && data!["accessToken"] != nil {
-                EZOpenSDK.setAccessToken(data!["accessToken"]!)
-                print("\(TAG)accessToken设置成功")
+                EZGlobalSDK.setAccessToken(data!["accessToken"]!)
+                print("\(TAG)accessToken configuré avec succès")
                 result(true)
             }else{
                 result(false)
             }
         } else if call.method == "startPlayback" {
-            /// 开始回放
+            /// Démarrer la lecture
             if ezPlayer != nil {
                 ezPlayer!.stopPlayback()
                 ezPlayer = nil
             }
             let data:Optional<Dictionary> = call.arguments as? Dictionary<String, Any>
-            let deviceSerial = data?["deviceSerial"] as? String //设备序列号
+            let deviceSerial = data?["deviceSerial"] as? String // Numéro de série du périphérique
             let cameraNo = data?["cameraNo"] as? Int
             let verifyCode = data?["verifyCode"] as? String
             let startTime = data?["startTime"] as? Int
@@ -125,45 +151,45 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
             recordFile.stopTime = endDate
             
             let bool = ezPlayer!.startPlayback(fromDevice: recordFile)
-            print("\(TAG)开始回放\(bool ? "成功" : "失败")")
+            print("\(TAG)Démarrage de la lecture \(bool ? "réussi" : "échoué")")
             result(bool)
         } else if call.method == "pause_play_back"{
-            /// 暂停回放
+            /// Pause de la lecture
             if ezPlayer == nil {
                 result(false)
                 return
             }
             let bool = ezPlayer!.pausePlayback()
-            print("\(TAG)暂停回放\(bool ? "成功" : "失败")")
+            print("\(TAG)Pause de la lecture \(bool ? "réussie" : "échouée")")
             result(bool)
         } else if call.method == "resume_play_back"{
-            /// 恢复回放
+            /// Reprendre la lecture
             if ezPlayer == nil {
                 result(false)
                 return
             }
             let bool = ezPlayer!.resumePlayback()
-            print("\(TAG)恢复回放\(bool ? "成功" : "失败")")
+            print("\(TAG)Reprise de la lecture \(bool ? "réussie" : "échouée")")
             result(bool)
         } else if call.method == "stopPlayback" {
-            /// 停止回放
+            /// Arrêter la lecture
             if ezPlayer == nil {
                 result(false)
                 return
             }
             let bool = ezPlayer!.stopPlayback()
-            print("\(TAG)停止回放\(bool ? "成功" : "失败")")
+            print("\(TAG)Arrêt de la lecture \(bool ? "réussi" : "échoué")")
             result(bool)
         } else if call.method == "startRealPlay" {
-            /// 开始直播
+            /// Démarrer le direct
             if(ezPlayer != nil){
-                // 先停止
+                // Arrêter d'abord
                 ezPlayer!.stopRealPlay();
                 ezPlayer = nil;
             }
             
             let data:Optional<Dictionary> = call.arguments as? Dictionary<String, Any>
-            let deviceSerial = data?["deviceSerial"] as? String //设备序列号
+            let deviceSerial = data?["deviceSerial"] as? String // Numéro de série du périphérique
             let cameraNo = data?["cameraNo"] as? Int
             let verifyCode = data?["verifyCode"] as? String
             
@@ -171,41 +197,41 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
                 result(false)
                 return
             }
-            // 注册播放器
+            // Enregistrer le lecteur
             ezPlayer = createEzPlayer(deviceSerial: deviceSerial!, cameraNo: cameraNo, verifyCode: verifyCode)
 
             let isSuccess = ezPlayer!.startRealPlay()
-            print("\(TAG) 开始直播 \(isSuccess ? "成功" : "失败")")
+            print("\(TAG) Démarrage du direct \(isSuccess ? "réussi" : "échoué")")
             result(isSuccess)
         } else if call.method == "stopRealPlay" {
-            /// 停止直播
+            /// Arrêter le direct
             if ezPlayer == nil {
                 result(false)
                 return
             }
             let isSuccess = ezPlayer!.stopRealPlay()
-            print("\(TAG) 停止直播 \(isSuccess ? "成功" : "失败")")
+            print("\(TAG) Arrêt du direct \(isSuccess ? "réussi" : "échoué")")
             result(isSuccess)
         }  else if call.method == "openSound"{
-            /// 打开声音
+            /// Activer le son
             if ezPlayer == nil {
                 result(false)
                 return
             }
             let bool = ezPlayer!.openSound()
-            print("\(TAG)打开声音\(bool ? "成功" : "失败")")
+            print("\(TAG)Activation du son \(bool ? "réussie" : "échouée")")
             result(bool)
         } else if call.method == "closeSound"{
-            /// 关闭声音
+            /// Désactiver le son
             if ezPlayer == nil {
                 result(false)
                 return
             }
             let bool = ezPlayer!.closeSound()
-            print("\(TAG)关闭声音\(bool ? "成功" : "失败")")
+            print("\(TAG)Désactivation du son \(bool ? "réussie" : "échouée")")
             result(bool)
         } else if call.method == "capturePicture"{
-            /// 截屏
+            /// Capture d'écran
             if ezPlayer == nil {
                 result(false)
                 return
@@ -213,36 +239,66 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
             let image =  ezPlayer!.capturePicture(10)
             if image != nil {
                 saveImage2Library(image: image!,callback:  {isSuccess in
-                    print("\(self.TAG)截屏\(isSuccess ? "成功" : "失败")")
+                    print("\(self.TAG)Capture d'écran \(isSuccess ? "réussie" : "échouée")")
                     result(isSuccess)
                 })
             } else {
                 result(false)
             }
         } else if call.method == "start_record" {
-            /// 开始录像
+            /// Démarrer l'enregistrement
+            print("enregistrement demandé")
             if ezPlayer == nil {
                 result(false)
                 return
             }
-            //录屏前,先结束上一次录像
-            ezPlayer!.stopLocalRecordExt({(isSuccess : Bool) in
-                let documentDir = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory,
-                                                                      FileManager.SearchPathDomainMask.userDomainMask, true).first
-                let date = String(DateUtil.getCurrentTimeStamp())
-                self.videoPath = "\(documentDir ?? "")/\(date).mp4"
-                let isSuccess = self.ezPlayer!.startLocalRecord(withPathExt: self.videoPath)
-                print("\(self.TAG)录屏\(isSuccess ? "成功": "失败")")
-                result(isSuccess)
-            })
+            print("on a un ezPlayer")
+            // Avant l'enregistrement d'écran, terminer d'abord l'enregistrement précédent
+            let documentDir = NSSearchPathForDirectoriesInDomains(FileManager.SearchPathDirectory.documentDirectory,
+                                                                                  FileManager.SearchPathDomainMask.userDomainMask, true).first
+            let date = String(DateUtil.getCurrentTimeStamp())
+            self.videoPath = "\(documentDir ?? "")/\(date).mp4"
+            print("\(self.TAG)chemin du record:\(self.videoPath)")
+            let isSuccess = self.ezPlayer!.startLocalRecord(withPathExt: self.videoPath)
+            print("\(self.TAG)Enregistrement d'écran \(isSuccess ? "réussi": "échoué")")
+            result(isSuccess)
+
+        } else if call.method == "ptz" {
+            guard let args = call.arguments as? [String: Any],
+                  let deviceSerial = args["deviceSerial"] as? String,
+                  let cameraNo = args["cameraNo"] as? Int,
+                  let actionStr = args["action"] as? String
+            else { result(FlutterError(code:"PTZ_BAD_ARGS", message:"Missing args", details:nil)); return }
+
+            let cmdStr = args["command"] as? String
+            let speed  = (args["speed"] as? Int) ?? 0
+
+            // Map String -> EZPTZCommand (ou nil si STOP)
+            var mapped: EZPTZCommand?
+            if let c = cmdStr {
+                switch c {
+                case "UP":       mapped = .up
+                case "DOWN":     mapped = .down
+                case "LEFT":     mapped = .left
+                case "RIGHT":    mapped = .right
+                case "ZOOM_IN":  mapped = .zoomIn
+                case "ZOOM_OUT": mapped = .zoomOut
+                default:
+                  result(FlutterError(code:"PTZ_BAD_COMMAND", message:"Unknown command \(c)", details:nil))
+                  return
+                }
+            }
+            let intention: EZPTZCommand? = (actionStr.uppercased() == "START") ? mapped : nil
+            ptzSwitch(deviceSerial: deviceSerial, cameraNo: cameraNo, newCmd: intention, speed: speed, flutterResult: result)
+
         } else if call.method == "stop_record"{
-            /// 停止录像
+            /// Arrêter l'enregistrement
             if ezPlayer == nil {
                 result(false)
                 return
             }
             ezPlayer!.stopLocalRecordExt({(isSuccess : Bool) in
-                print("\(self.TAG)停止录屏\(isSuccess ? "成功": "失败")")
+                print("\(self.TAG)Arrêt de l'enregistrement d'écran \(isSuccess ? "réussi": "échoué")")
                 if self.videoPath != nil {
                     self.saveVideo2Library(path: self.videoPath!, callback: {success in
                         result(success)
@@ -252,8 +308,8 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
                 }
              })
         } else if call.method == "set_video_level"{
-            /// 设置视频清晰度
-            /// videoLevel:  0流畅，1均衡，2高清，3超清。默认高清
+            /// Définir la qualité vidéo
+            /// videoLevel: 0 fluide, 1 équilibré, 2 haute définition, 3 ultra haute définition. Par défaut haute définition
             let data:Optional<Dictionary> = call.arguments as? Dictionary<String, Any>
             let deviceSerial:String? = data?["deviceSerial"] as? String
             var cameraNo:Int? = data?["cameraNo"] as? Int
@@ -271,12 +327,12 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
             }
             let videoLevelType = getVideoLevelType(videoLevel: videoLevel!)
           
-            EZOpenSDK.setVideoLevel(deviceSerial!, cameraNo: cameraNo!, videoLevel: videoLevelType, completion: { error in
+            EZGlobalSDK.setVideoLevel(deviceSerial!, cameraNo: cameraNo!, videoLevel: videoLevelType, completion: { error in
                 result(false)
             })
             result(true)
         } else if call.method == "start_config_ap" {
-            /// AP配网接口(热点配网)
+            /// Interface de configuration AP (configuration par point d'accès)
             let data:Optional<Dictionary> = call.arguments as? Dictionary<String, Any>
             let deviceSerial:String? = data?["deviceSerial"] as? String
             let ssid:String? = data?["ssid"] as? String
@@ -285,48 +341,48 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
 
 //            EZOpenSDK.startAPConfigWifi(withSsid: ssid ?? "", password: password ?? "",
 //                                        deviceSerial: deviceSerial ?? "", verifyCode: verifyCode ?? "", deviceStatus: wifiConfigStatus)
-            
-            EZOpenSDK.startAPConfigWifi(withSsid: ssid ?? "", password: password ?? "",
+
+            EZGlobalSDK.startAPConfigWifi(withSsid: ssid ?? "", password: password ?? "",
                                         deviceSerial: deviceSerial ?? "", verifyCode: verifyCode ?? "", result: apWifiConfigResult)
             
         } else if call.method == "start_config_wifi" {
-            /// SmartConfig & 声波配网
+            /// SmartConfig et configuration par ondes sonores
             let data:Optional<Dictionary> = call.arguments as? Dictionary<String, Any>
             let deviceSerial:String? = data?["deviceSerial"] as? String
             let ssid:String? = data?["ssid"] as? String
             let password:String? = data?["password"] as? String
             let mode:String? = data?["mode"] as? String
 
-            var configMode = EZWiFiConfigMode.smart ////默认wifi配网
+            var configMode = EZWiFiConfigMode.smart // Configuration WiFi par défaut
             if mode == "wave"{
-                //声波配网
+                // Configuration par ondes sonores
                 configMode = .wave
             }
-            EZOpenSDK.startConfigWifi(ssid ?? "", password: password ?? "", deviceSerial:deviceSerial ?? "",
+            EZGlobalSDK.startConfigWifi(ssid ?? "", password: password ?? "", deviceSerial:deviceSerial ?? "",
                                       mode: configMode.rawValue,deviceStatus: wifiConfigStatus)
         } else if call.method == "stop_config" {
-            /// 停止配网
+            /// Arrêter la configuration réseau
             let data:Optional<Dictionary> = call.arguments as? Dictionary<String, Any>
             var mode:String? = data?["mode"] as? String
             if mode == nil {
                 mode = "wifi"
             }
             if mode == "wave" || mode == "wifi" {
-                let isSuccess:Bool = EZOpenSDK.stopConfigWifi()
-                print("\(TAG)停止配网\(isSuccess ? "成功" : "失败")")
+                let isSuccess:Bool = EZGlobalSDK.stopConfigWifi()
+                print("\(TAG)Arrêt de la configuration réseau \(isSuccess ? "réussi" : "échoué")")
                 result(isSuccess)
             } else if mode == "ap" {
-                EZOpenSDK.stopAPConfigWifi()
+                EZGlobalSDK.stopAPConfigWifi()
                 result(true)
             } else {
                 result(false)
             }
         }  else if call.method == "start_voice_talk"{
-            /// 开始对讲
+            /// Démarrer l'interphone
             if ezPlayer != nil {
-                ezPlayer!.closeSound() //关闭视频播放声音
+                ezPlayer!.closeSound() // Fermer le son de lecture vidéo
             }
-            //获取参数
+            // Obtenir les paramètres
             let data:Optional<Dictionary> = call.arguments as? Dictionary<String, Any>
             let deviceSerial:String? = data?["deviceSerial"] as? String
             let cameraNo:Int? = data?["cameraNo"] as? Int
@@ -338,34 +394,34 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
                 isPhone2Dev = (data!["isPhone2Dev"] as! Int)
             }
             if _talkPlayer == nil {
-                //创建对讲器
-                _talkPlayer = EZOpenSDK.createPlayer(withDeviceSerial: deviceSerial!, cameraNo: cameraNo ?? 1)
+                // Créer l'interphone
+                _talkPlayer = EZGlobalSDK.createPlayer(withDeviceSerial: deviceSerial!, cameraNo: cameraNo ?? 1)
                 _talkPlayer!.setPlayVerifyCode(verifyCode)
                 _talkPlayer!.delegate = self
             }else{
                 _talkPlayer!.stopVoiceTalk()
             }
-            //开启对讲
+            // Démarrer l'interphone
             _talkPlayer!.startVoiceTalk()
         } else if call.method == "stop_voice_talk" {
-            /// 停止对讲
+            /// Arrêter l'interphone
             var isSuccess : Bool = true
             if _talkPlayer != nil {
                 isSuccess = _talkPlayer!.stopVoiceTalk()
-                print("\(self.TAG)结束对讲\(isSuccess ? "成功": "失败")")
+                print("\(self.TAG)Fin de l'interphone \(isSuccess ? "réussie": "échouée")")
                 _talkPlayer!.delegate = nil
                 _talkPlayer!.destoryPlayer()
                 _talkPlayer = nil
             }
             result(isSuccess)
         } else if call.method == "get_storage_status"{
-            /// 获取存储介质状态(如是否初始化，格式化进度等) 该接口为耗时操作，必须在线程中调用
+            /// Obtenir l'état du support de stockage (comme l'initialisation, le progrès du formatage, etc.) Cette interface est une opération chronophage, doit être appelée dans un thread
             let data:Optional<Dictionary> = call.arguments as? Dictionary<String, Any>
             let deviceSerial:String? = data?["deviceSerial"] as? String
-            EZOpenSDK.getStorageStatus(deviceSerial!, completion: { info ,error in
+            EZGlobalSDK.getStorageStatus(deviceSerial!, completion: { info ,error in
                 if let infoList = info as? [EZStorageInfo] {
                     var mapList = Array<Dictionary<String, Any>>()
-                    //遍历数组，把EZStorageInfo数组转换为字典数组
+                    // Parcourir le tableau, convertir le tableau EZStorageInfo en tableau de dictionnaires
                     infoList.forEach { e in
                         var map = ["formatRate":e.formatRate,"index":e.index,"name":e.name ?? "","status":e.status] as [String : Any]
                         mapList.append(map)
@@ -379,7 +435,7 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
             })
             
         } else if call.method == "format_storage" {
-            ///格式化分区
+            /// Formater la partition
             let data:Optional<Dictionary> = call.arguments as? Dictionary<String, Any>
             let deviceSerial:String? = data?["deviceSerial"] as? String
             var partitionIndex:Int? = data?["partitionIndex"] as? Int
@@ -387,7 +443,7 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
                 partitionIndex = -1
             }
             
-            EZOpenSDK.formatStorage(deviceSerial!, storageIndex: partitionIndex!) { error in
+            EZGlobalSDK.formatStorage(deviceSerial!, storageIndex: partitionIndex!) { error in
                 result(error == nil)
             }
            
@@ -408,7 +464,7 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
     }
     
     /**
-     * 直播、回放和对讲 错误回调
+     * Callback d'erreur pour direct, lecture et interphone
      */
     public func player(_ player: EZPlayer!, didPlayFailed error: Error!) {
 
@@ -423,29 +479,29 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
     }
     
     /**
-     * 直播、回放和对讲 成功后收到的状态码
+     * Codes d'état reçus après le succès du direct, de la lecture et de l'interphone
      */
     public func player(_ player: EZPlayer!, didReceivedMessage messageCode: Int) {
         var dict = [String:Any]()
         switch messageCode {
         case 1:
-            print("\(TAG)直播开始")
+            print("\(TAG)Démarrage du direct")
             dict.updateValue(true, forKey: "isSuccess")
             break
         case 11:
-            print("\(TAG)回放开始")
+            print("\(TAG)Démarrage de la lecture")
             dict.updateValue(true, forKey: "isSuccess")
             break
         case 4:
-            print("\(TAG)对讲开始")
+            print("\(TAG)Démarrage de l'interphone")
             if _talkPlayer != nil {
-                //半双工设备需要设置
+                // Les périphériques half-duplex nécessitent une configuration
                 if supportTalk == 3{
                     if isPhone2Dev == 0 {
-                        //手机端听 设备端说
+                        // Téléphone écoute, périphérique parle
                         _talkPlayer!.audioTalkPressed(false)
                     } else if isPhone2Dev == 1{
-                        //手机端说 设备端听
+                        // Téléphone parle, périphérique écoute
                         _talkPlayer!.audioTalkPressed(true)
                     }
                 }
@@ -453,7 +509,7 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
             dict.updateValue(true, forKey: "isSuccess")
             break
         case 5:
-            print("\(TAG)对讲结束")
+            print("\(TAG)Fin de l'interphone")
             dict.updateValue(true, forKey: "isSuccess")
             break
         default: break
@@ -463,7 +519,7 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
     }
     
     /**
-     * 字典转JSON
+     * Dictionnaire vers JSON
      */
     func convertDictionaryToJson(dict : Dictionary<String,Any>) -> String {
         let data = try? JSONSerialization.data(withJSONObject: dict,options: JSONSerialization.WritingOptions.init(rawValue: 0))
@@ -472,7 +528,7 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
     }
     
     /**
-     * 字典数组转JSON
+     * Tableau de dictionnaires vers JSON
      */
     func convertDictionaryArrayToJson(_ data: Any) -> String? {
         do {
@@ -485,7 +541,7 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
     }
     
     /**
-     *  保存图片到相册
+     * Sauvegarder l'image dans la galerie
      */
     private func saveImage2Library(image:UIImage,callback:@escaping(_ result:Bool)->Void ) {
         PHPhotoLibrary.shared().performChanges(
@@ -499,7 +555,7 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
     
     
     /**
-     * 保存视频到相册
+     * Sauvegarder la vidéo dans la galerie
      */
     private func saveVideo2Library(path:String, callback:@escaping(_ result:Bool)->Void ) {
         PHPhotoLibrary.shared().performChanges({
@@ -507,7 +563,7 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
         }){(success,error) in
             DispatchQueue.main.async {
                 if !success {
-                    print(">>>>>>>>>保存相册失败:\(String(describing: error))")
+                    print(">>>>>>>>>Sauvegarde dans la galerie échouée: \(String(describing: error))")
                 }
                 callback(success)
             }
@@ -515,7 +571,7 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
     }
     
     /*
-     * 根据videoLevel返回EZVideoLevelType
+     * Retourner EZVideoLevelType selon videoLevel
      */
     private func getVideoLevelType (videoLevel:Int) -> EZVideoLevelType {
         var videolevelType:EZVideoLevelType = EZVideoLevelType.high
@@ -534,52 +590,52 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
         return videolevelType
     }
     
-    /// 注册播放器
+    /// Enregistrer le lecteur
     private func createEzPlayer(deviceSerial:String,cameraNo:Int?,verifyCode:String?) -> EZPlayer {
-        let player = EZOpenSDK.createPlayer(withDeviceSerial: deviceSerial, cameraNo: cameraNo ?? 1)
+        let player = EZGlobalSDK.createPlayer(withDeviceSerial: deviceSerial, cameraNo: cameraNo ?? 1)
         if verifyCode != nil {
             player.setPlayVerifyCode(verifyCode)
         }
         player.delegate = self
         player.setPlayerView(self.playerView)
-        print("\(TAG)注册播放器成功")
+        print("\(TAG)Enregistrement du lecteur réussi")
         return player
     }
     
     /**
-     * AP(热点)配网回调
+     * Callback de configuration AP (point d'accès)
      */
     lazy var apWifiConfigResult = { (isSuccess:Bool) in
         let entity:PeiwangResultEntity = PeiwangResultEntity()
         entity.isSuccess = isSuccess
-        entity.msg = isSuccess ? "AP配网成功" : "AP配网失败"
+        entity.msg = isSuccess ? "Configuration AP réussie" : "Configuration AP échouée"
         self.pwResult?.sendMessage(entity.getString())
-        EZOpenSDK.stopConfigWifi()
+        EZGlobalSDK.stopConfigWifi()
     }
     
     /**
-     *  配网回调
-     *  由于4.20.1版本没有失败回调，需要用户在项目中自行配置，比如可以设置一个倒计时。
+     * Callback de configuration réseau
+     * En raison de l'absence de callback d'échec dans la version 4.20.1, l'utilisateur doit configurer lui-même dans le projet, par exemple en définissant un compte à rebours.
      */
     lazy var wifiConfigStatus = { (status:EZWifiConfigStatus,result:String?)  in
         let entity:PeiwangResultEntity = PeiwangResultEntity()
 
         switch(status){
         case .DEVICE_PLATFORM_REGISTED:
-            print("\(self.TAG)设备注册平台成功")
+            print("\(self.TAG)Enregistrement du périphérique sur la plateforme réussi")
             entity.isSuccess = true
-            entity.msg = "注册平台成功"
+            entity.msg = "Enregistrement sur la plateforme réussi"
             self.pwResult?.sendMessage(entity.getString())
-            EZOpenSDK.stopConfigWifi()
+            EZGlobalSDK.stopConfigWifi()
             break
         case .DEVICE_WIFI_CONNECTING:
-            print("\(self.TAG)设备正在连接WiFi...")
+            print("\(self.TAG)Périphérique en cours de connexion au WiFi...")
             break
         case .DEVICE_WIFI_CONNECTED:
-            print("\(self.TAG)Wi-Fi连接成功")
+            print("\(self.TAG)Connexion Wi-Fi réussie")
             break
          case .DEVICE_ACCOUNT_BINDED:
-             print("\(self.TAG)已绑定设备")
+             print("\(self.TAG)Périphérique déjà lié")
              break
 //         case .DEVICE_WIFI_SENT_SUCCESS:
 //             print("\(self.TAG)向设备发送WiFi信息成功")

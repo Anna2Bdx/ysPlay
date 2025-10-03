@@ -10,11 +10,11 @@ import 'package:ys_play/src/entity/ys_response_entity.dart';
 import 'package:ys_play/src/ys_http_api.dart';
 
 enum YsMediaType {
-  playback, //回放
-  real, //直播
+  playback, //Lecture différée
+  real, //Direct
 }
 
-/// 播放状态
+/// État de lecture
 enum YsPlayStatus {
   onPrepareing,
   onPlaying,
@@ -23,19 +23,19 @@ enum YsPlayStatus {
 }
 
 class YsPlay {
-  /// 平台通信渠道
+  /// Canal de communication de la plateforme
   static const _channel = MethodChannel("com.example.ys_play");
 
-  /// 播放状态渠道
+  /// Canal d'état de lecture
   static const BasicMessageChannel<dynamic> _playerStatus = BasicMessageChannel(
       "com.example.ys_play/player_status", StandardMessageCodec());
 
-  /// 配网结果渠道
+  /// Canal de résultats de configuration réseau
   static const BasicMessageChannel<dynamic> _pwResultChannel =
       BasicMessageChannel(
           "com.example.ys_play/pei_wang", StandardMessageCodec());
 
-  /// 播放状态监听
+  /// Écoute de l'état de lecture
   static void onResultListener({
     required Function() onSuccess,
     required Function(String errorInfo) onPlayError,
@@ -56,7 +56,7 @@ class YsPlay {
     });
   }
 
-  /// 配网结果监听
+  /// Écoute des résultats de configuration réseau
   static void peiwangResultListener(Function(YsPwResult) onResult) {
     _pwResultChannel.setMessageHandler((message) async {
       if (message != null && message is String && message.isNotEmpty) {
@@ -66,31 +66,31 @@ class YsPlay {
     });
   }
 
-  /// 初始化萤石SDK
-  /// 唯一一个必传参数:`appKey`.在萤石SDK官方平台中创建应用后生成。
+  /// Initialiser le SDK EZVIZ
+  /// Seul paramètre obligatoire :`appKey`. Généré après création de l'application sur la plateforme officielle du SDK EZVIZ.
   static Future<bool> initSdk(String appKey) async {
     bool result = await _channel.invokeMethod("init_sdk", {'appKey': appKey});
     return result;
   }
 
-  /// 设置`accessToken`
-  /// 访问令牌，由服务器返回给客户端，用于认证。
+  /// Définir l'`accessToken`
+  /// Jeton d'accès retourné par le serveur au client pour l'authentification.
   static Future<bool> setAccessToken(String accessToken) async {
     bool result = await _channel
         .invokeMethod("set_access_token", {'accessToken': accessToken});
     return result;
   }
 
-  /// 开始回放
+  /// Démarrer la lecture différée
   ///
-  /// 有5个入参:
-  /// * 其中有3个必传参数:
-  ///   1.`deviceSerial`:设备序列号,一般通过扫描设备二维码获得,必传;
-  ///   2.`startTime`:开始时间;
-  ///   3.`endTime`:结束时间。
-  /// * 2个可选参数:
-  ///   1.`verifyCode`:如果视频需要加密，可以传;默认为设备的6位验证码;
-  ///   2.`cameraNo`:设备通道号，默认为1，可不传.
+  /// A 5 paramètres d'entrée :
+  /// * Dont 3 paramètres obligatoires :
+  ///   1.`deviceSerial`:numéro de série de l'appareil, généralement obtenu en scannant le QR code de l'appareil, obligatoire;
+  ///   2.`startTime`:heure de début;
+  ///   3.`endTime`:heure de fin.
+  /// * 2 paramètres optionnels :
+  ///   1.`verifyCode`:si la vidéo nécessite un chiffrement, peut être transmis; par défaut le code de vérification à 6 chiffres de l'appareil;
+  ///   2.`cameraNo`:numéro de canal de l'appareil, par défaut 1, peut être omis.
   static Future<bool> startPlayback({
     required String deviceSerial,
     required int startTime,
@@ -108,28 +108,28 @@ class YsPlay {
     return result;
   }
 
-  /// 停止回放
+  /// Arrêter la lecture différée
   static Future<bool> stopPlayback() async {
     await _channel.invokeMethod("stopPlayback");
     return true;
   }
 
-  /// 暂停回放
+  /// Pause de la lecture différée
   static Future<bool> pausePlayback() async {
     bool result = await _channel.invokeMethod("pause_play_back");
     return result;
   }
 
-  /// 恢复回放
+  /// Reprendre la lecture différée
   static Future<bool> resumePlayback() async {
     bool result = await _channel.invokeMethod("resume_play_back");
     return result;
   }
 
-  /// 开始直播
+  /// Démarrer le direct
   ///
-  /// 有3个入参:
-  /// 其中`deviceSerial`必传,`verifyCode`和`cameraNo`可选。
+  /// A 3 paramètres d'entrée :
+  /// Dont `deviceSerial` est obligatoire, `verifyCode` et `cameraNo` sont optionnels.
   static Future<bool> startRealPlay({
     required String deviceSerial,
     String? verifyCode,
@@ -142,45 +142,45 @@ class YsPlay {
     });
   }
 
-  /// 停止直播
+  /// Arrêter le direct
   static Future<bool> stopRealPlay() async {
     await _channel.invokeMethod("stopRealPlay");
     return true;
   }
 
-  /// 打开声音
+  /// Activer le son
   static Future<bool> openSound() async {
     bool result = await _channel.invokeMethod("openSound");
     return result;
   }
 
-  /// 关闭声音
+  /// Désactiver le son
   static Future<bool> closeSound() async {
     bool result = await _channel.invokeMethod("closeSound");
     return result;
   }
 
-  /// 截屏
+  /// Capture d'écran
   static Future capturePicture() async {
     var result = await _channel.invokeMethod("capturePicture");
     return result;
   }
 
-  /// 开始录像
+  /// Démarrer l'enregistrement
   static Future<bool> startRecordWithFile() async {
     return await _channel.invokeMethod('start_record');
   }
 
-  /// 停止录像
+  /// Arrêter l'enregistrement
   static Future<bool> stopRecordWithFile() async {
     return await _channel.invokeMethod('stop_record');
   }
 
-  /// 设置视频清晰度
+  /// Définir la qualité vidéo
   ///
-  /// `deviceSerial`:设备序列号,一般通过扫描设备二维码获得,必传;
-  /// `cameraNo`:设备通道号，默认为1，可不传;
-  /// `videoLevel`:  0-流畅 1-均衡 2-高品质,默认传2.
+  /// `deviceSerial`:numéro de série de l'appareil, généralement obtenu en scannant le QR code de l'appareil, obligatoire;
+  /// `cameraNo`:numéro de canal de l'appareil, par défaut 1, peut être omis;
+  /// `videoLevel`:  0-fluide 1-équilibré 2-haute qualité, par défaut 2.
   static Future<bool> setVideoLevel({
     required String deviceSerial,
     int cameraNo = 1,
@@ -197,14 +197,41 @@ class YsPlay {
     return result;
   }
 
-  /// 控制云台 开始
+  static Future<bool> startPTZ({
+    required String deviceSerial,
+    required int cameraNo,
+    required String command, // "UP","DOWN","LEFT","RIGHT","ZOOM_IN","ZOOM_OUT"
+    int speed = 0,          // 0 = lent, 1 = moyen, 2 = rapide
+  }) =>
+      _channel.invokeMethod<bool>('ptz', {
+        'deviceSerial': deviceSerial,
+        'cameraNo': cameraNo,
+        'command': command,
+        'action': 'START',
+        'speed': speed,
+      }).then((v) => v ?? false);
+
+  static Future<bool> stopPTZ({
+    required String deviceSerial,
+    required int cameraNo,
+    required String command,
+  }) =>
+      _channel.invokeMethod<bool>('ptz', {
+        'deviceSerial': deviceSerial,
+        'cameraNo': cameraNo,
+        'command': command,
+        'action': 'STOP',
+        'speed': 0, // valeur numérique entre 0 et 7
+      }).then((v) => v ?? false);
+
+  /// Contrôle PTZ - démarrage
   ///
-  /// `accessToken`:访问令牌，由服务器返回给客户端，用于认证;
-  /// `deviceSerial`:设备序列号,一般通过扫描设备二维码获得,必传;
-  /// `cameraNo`:设备通道号，默认为1，可不传;
-  /// `direction`:0-上，1-下，2-左，3-右，4-左上，5-左下，6-右上，7-右下，8-放大，9-缩小，
-  ///            10-近焦距，11-远焦距;
-  /// `speed`:0-慢，1-适中，2-快，海康设备参数不可为0.默认为1.
+  /// `accessToken`:jeton d'accès retourné par le serveur au client pour l'authentification;
+  /// `deviceSerial`:numéro de série de l'appareil, généralement obtenu en scannant le QR code de l'appareil, obligatoire;
+  /// `cameraNo`:numéro de canal de l'appareil, par défaut 1, peut être omis;
+  /// `direction`:0-haut, 1-bas, 2-gauche, 3-droite, 4-haut-gauche, 5-bas-gauche, 6-haut-droite, 7-bas-droite, 8-zoom avant, 9-zoom arrière,
+  ///            10-mise au point proche, 11-mise au point éloignée;
+  /// `speed`:0-lent, 1-modéré, 2-rapide, pour les appareils Hikvision le paramètre ne peut pas être 0. Par défaut 1.
   static Future<YsResponseEntity> ptzStart({
     required String accessToken,
     required String deviceSerial,
@@ -221,7 +248,7 @@ class YsPlay {
     );
   }
 
-  /// 云台控制 停止
+  /// Contrôle PTZ - arrêt
   static Future<YsResponseEntity> ptzStop({
     required String accessToken,
     required String deviceSerial,
@@ -236,7 +263,7 @@ class YsPlay {
     );
   }
 
-  /// 获取设备能力集
+  /// Obtenir les capacités de l'appareil
   static Future<CapacityResponseEntity> getDevCapacity({
     required String accessToken,
     required String deviceSerial,
@@ -247,19 +274,19 @@ class YsPlay {
     );
   }
 
-  /// 镜像翻转
+  /// Miroir/Rotation
   static Future<YsResponseEntity> ptzMirror(
       YsRequestEntity requestEntity) async {
     return await YsHttpApi.devPtzMirror(requestEntity);
   }
 
-  /// 释放资源
+  /// Libérer les ressources
   static Future<void> dispose() async {
     await _channel.invokeMethod("dispose");
   }
 
-  /// 无线配网模式
-  /// mode: wifi-wifi配网 wave-声波配网
+  /// Mode de configuration réseau sans fil
+  /// mode: wifi-configuration wifi, wave-configuration par onde sonore
   static Future<void> startConfigWifi({
     required String deviceSerial,
     required String ssid,
@@ -277,7 +304,7 @@ class YsPlay {
     );
   }
 
-  /// 热点配网模式
+  /// Mode de configuration par point d'accès
   static Future<void> startConfigAP({
     required String deviceSerial,
     required String ssid,
@@ -297,19 +324,19 @@ class YsPlay {
     );
   }
 
-  /// 停止配网
+  /// Arrêter la configuration réseau
   static Future<bool> stopConfigPw({required String mode}) async {
     bool result = await _channel.invokeMethod('stop_config', {'mode': mode});
     return result;
   }
 
-  /// 开始对讲
+  /// Démarrer l'interphone
   static Future<bool> startVoiceTalk({
     required String deviceSerial,
     String? verifyCode,
     int cameraNo = 1,
-    int isPhone2Dev = 1, //1手机端说设备端听 0手机端听设备端说
-    int supportTalk = 1, //1-全双工 3-半双工
+    int isPhone2Dev = 1, //1-téléphone parle appareil écoute 0-téléphone écoute appareil parle
+    int supportTalk = 1, //1-full duplex 3-half duplex
   }) async {
     Map<String, dynamic> argsParam = {
       "deviceSerial": deviceSerial,
@@ -322,19 +349,19 @@ class YsPlay {
     return result;
   }
 
-  ///停止对讲
+  /// Arrêter l'interphone
   static Future<bool> stopVoiceTalk() async {
     bool result = await _channel.invokeMethod("stop_voice_talk");
     return result;
   }
 
-  /// 获取存储介质状态(如是否初始化，格式化进度等)
+  /// Obtenir l'état du support de stockage (comme l'initialisation, le progrès du formatage, etc.)
   static Future getStorageStatus({required String deviceSerial}) async {
     return await _channel
         .invokeMethod("get_storage_status", {'deviceSerial': deviceSerial});
   }
 
-  /// 根据分区编号格式化
+  /// Formater selon le numéro de partition
   static Future formatStorage({
     required String deviceSerial,
     int? index,

@@ -9,17 +9,17 @@ import Foundation
 
  class Constants {
      
-     //渠道名称
+     // Nom du canal
      class var CHANNEL:String{
          return "com.example.ys_play"
      }
      
-     //播放状态
+     // État de lecture
      class var PLAYER_STATUS_CHANNEL:String {
          return "com.example.ys_play/player_status"
      }
      
-     //配网渠道
+     // Canal de configuration réseau
      class var PEI_WANG_CHANNEL : String {
          return "com.example.ys_play/pei_wang"
      }

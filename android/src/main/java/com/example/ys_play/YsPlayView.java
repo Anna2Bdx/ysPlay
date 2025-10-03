@@ -17,7 +17,7 @@ public class YsPlayView implements PlatformView{
 
     public YsPlayView(@NonNull Context context,OnPlatformViewCreated onViewCreated){
         textureView = new TextureView(context);
-        onViewCreated.callback(textureView); //把 textureView 回调给 YsPlayPlugin
+        onViewCreated.callback(textureView); 
     }
 
     @Nullable

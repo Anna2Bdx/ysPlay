@@ -32,21 +32,21 @@ class PanelPaint extends CustomPainter {
       ..color = panelColor
       ..style = PaintingStyle.stroke;
 
-    Offset center = Offset(size.width / 2, size.height / 2); //中心点
+    Offset center = Offset(size.width / 2, size.height / 2); // Point central
 
-    // 外圆
+    // Cercle extérieur
     Rect outCircle = Rect.fromCircle(center: center, radius: outerRadius);
     canvas.drawArc(
         outCircle, 0.0, 2 * pi, false, paint..style = PaintingStyle.stroke);
 
-    // 内圆
+    // Cercle intérieur
     Rect innerCircle = Rect.fromCircle(center: center, radius: innerRadius);
     canvas.drawArc(innerCircle, 0.0, 2 * pi, false, paint);
 
-    /// 左侧扇形
-    /// 注：因为圆周的取值范围是-pi~pi.
-    /// 该区域的取值范围是3pi/4~5pi/4 超出上述范围。
-    /// 因此需要分段绘制。即:3pi/4~pi;-pi~-3pi/4
+    /// Secteur gauche
+    /// Note: Étant donné que la plage de valeurs de la circonférence est -pi~pi.
+    /// La plage de valeurs de cette zone est 3pi/4~5pi/4, dépassant la plage ci-dessus.
+    /// Il faut donc dessiner par segments, soit: 3pi/4~pi; -pi~-3pi/4
     SectorShape left = SectorShape(
       center: center,
       innerRadius: innerRadius,
@@ -85,7 +85,7 @@ class PanelPaint extends CustomPainter {
         ..color = leftPieColor,
     );
 
-    /// 右侧扇形
+    /// Secteur droit
     SectorShape right = SectorShape(
       center: center,
       innerRadius: innerRadius,
@@ -109,7 +109,7 @@ class PanelPaint extends CustomPainter {
         ..color = rightPieColor,
     );
 
-    /// 上方扇形
+    /// Secteur supérieur
     SectorShape top = SectorShape(
       center: center,
       innerRadius: innerRadius,
@@ -133,7 +133,7 @@ class PanelPaint extends CustomPainter {
         ..color = topPieColor,
     );
 
-    /// 下方扇形
+    /// Secteur inférieur
     SectorShape bottom = SectorShape(
       center: center,
       innerRadius: innerRadius,

@@ -1,7 +1,7 @@
 class EZConstants {
-  ///监控回放：播放成功
+  /// Surveillance lecture: lecture réussie
   static const int playBackSuccess = 205;
 
-  ///监控回放：播放失败
+  /// Surveillance lecture: lecture échouée
   static const int playBackFailed = 206;
 }

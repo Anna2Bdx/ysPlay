@@ -3,11 +3,11 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 class SectorShape {
-  Offset center; // 中心点
-  double innerRadius; // 小圆半径
-  double outerRadius; // 大圆半径
-  double startAngle; // 起始弧度
-  double sweepAngle; // 扫描弧度
+  Offset center; // Point central
+  double innerRadius; // Rayon du petit cercle
+  double outerRadius; // Rayon du grand cercle
+  double startAngle; // Angle de départ (en radians)
+  double sweepAngle; // Angle de balayage (en radians)
 
   SectorShape({
     required this.center,
@@ -45,9 +45,9 @@ class SectorShape {
     double arrAngle = 80 * pi / 180;
     double r0 = innerRadius;
     double r1 = outerRadius;
-    double ringLen = r1 - r0; // 圆环半径
-    double arrHeight = cos(arrAngle / 2) * sideLen; // 箭头高度
-    double bottomLen = sideLen * sin(arrAngle / 2) * 2; // 箭头底边长度
+    double ringLen = r1 - r0; // Rayon de l'anneau
+    double arrHeight = cos(arrAngle / 2) * sideLen; // Hauteur de la flèche
+    double bottomLen = sideLen * sin(arrAngle / 2) * 2; // Longueur de la base de la flèche
     double diff = (ringLen - arrHeight) / 2;
 
     double p0x = 0.0;
@@ -57,7 +57,7 @@ class SectorShape {
     double p2x = 0.0;
     double p2y = 0.0;
 
-    //左
+    // Gauche
     if (startAngle == 3 * pi / 4 || startAngle == -1 * pi) {
       p0x = -1 * (diff + innerRadius);
       p0y = -1 * (bottomLen / 2);
@@ -66,7 +66,7 @@ class SectorShape {
       p2x = p0x;
       p2y = bottomLen / 2;
     } else if (startAngle == -pi / 4) {
-      //右
+      // Droite
       p0x = diff + innerRadius;
       p0y = -1 * (bottomLen / 2);
       p1x = outerRadius - diff;
@@ -74,7 +74,7 @@ class SectorShape {
       p2x = p0x;
       p2y = bottomLen / 2;
     } else if (startAngle == -pi * 3 / 4) {
-      //上
+      // Haut
       p0x = -1 * (bottomLen / 2);
       p0y = -1 * (innerRadius + diff);
       p1x = 0;
@@ -82,7 +82,7 @@ class SectorShape {
       p2x = bottomLen / 2;
       p2y = -1 * (innerRadius + diff);
     } else if (startAngle == pi / 4) {
-      //下
+      // Bas
       p0x = -1 * (bottomLen / 2);
       p0y = innerRadius + diff;
       p1x = 0;
@@ -103,12 +103,12 @@ class SectorShape {
   }
 
   bool contains(Offset p) {
-    // 校验环形区域
+    // Vérification de la zone annulaire
     double l = (p - center).distance;
     bool inRing = l <= outerRadius && l >= innerRadius;
     if (!inRing) return false;
 
-    // 校验角度范围
+    // Vérification de la plage d'angles
     double a = (p - center).direction;
     double endArg = startAngle + sweepAngle;
     double start = startAngle;

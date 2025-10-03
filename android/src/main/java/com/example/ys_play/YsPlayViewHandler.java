@@ -26,28 +26,28 @@ class YsPlayViewHandler extends Handler {
         }
         switch (msg.what) {
             case EZConstants.EZPlaybackConstants.MSG_REMOTEPLAYBACK_PLAY_SUCCUSS:
-                LogUtils.d("回放播放成功");
+                LogUtils.d("Lecture en différé réussie");
                 ysResult.onPlaySuccess();
                 break;
             case EZConstants.EZPlaybackConstants.MSG_REMOTEPLAYBACK_PLAY_FAIL:
             case EZConstants.EZRealPlayConstants.MSG_REALPLAY_PLAY_FAIL:
-                //得到播放失败描述
+                // Obtenir la description de l'échec de lecture
                 String description = errorinfo.description;
-                //错误信息回调
+                // Callback d'informations d'erreur
                 ysResult.onPlayError(description);
                 break;
             case EZConstants.MSG_VIDEO_SIZE_CHANGED:
-                //解析出视频画面分辨率回调
+                // Callback de résolution d'écran vidéo analysée
                 break;
             case EZConstants.EZRealPlayConstants.MSG_REALPLAY_PLAY_SUCCESS:
-                LogUtils.d("直播播放成功");
+                LogUtils.d("Lecture en direct réussie");
                 ysResult.onPlaySuccess();
                 break;
             case EZConstants.EZRealPlayConstants.MSG_REALPLAY_VOICETALK_FAIL:
                 handleVoiceTalkFailed(errorinfo);
                 break;
             case EZConstants.EZRealPlayConstants.MSG_REALPLAY_VOICETALK_SUCCESS:
-                LogUtils.d("对讲成功");
+                LogUtils.d("Interphone réussi");
                 ysResult.onTalkSuccess();
                 break;
             default:
@@ -56,36 +56,36 @@ class YsPlayViewHandler extends Handler {
     }
 
     /**
-     * 对讲失败
-     * @param errorInfo:错误信息
+     * Échec de l'interphone
+     * @param errorInfo: informations d'erreur
      */
     private void handleVoiceTalkFailed(ErrorInfo errorInfo) {
         String errorDes = "";
         switch (errorInfo.errorCode) {
             case ErrorCode.ERROR_TRANSF_DEVICE_TALKING:
-                errorDes = "同一时间只能与一台设备进行对讲哦，请停止其他对讲后再尝试";
+                errorDes = "Une seule conversation avec un périphérique à la fois, veuillez arrêter les autres conversations avant de réessayer";
                 break;
             case ErrorCode.ERROR_TRANSF_DEVICE_PRIVACYON:
-                errorDes = "隐私保护模式下无法对讲";
+                errorDes = "Impossible de parler en mode protection de la vie privée";
                 break;
             case ErrorCode.ERROR_TRANSF_DEVICE_OFFLINE:
-                errorDes = "设备不在线";
+                errorDes = "Périphérique hors ligne";
                 break;
             case ErrorCode.ERROR_TTS_MSG_REQ_TIMEOUT:
             case ErrorCode.ERROR_TTS_MSG_SVR_HANDLE_TIMEOUT:
             case ErrorCode.ERROR_TTS_WAIT_TIMEOUT:
             case ErrorCode.ERROR_TTS_HNADLE_TIMEOUT:
-                errorDes="请求超时，对讲已关闭";
+                errorDes="Timeout de la requête, interphone fermé";
                 break;
             case ErrorCode.ERROR_CAS_AUDIO_SOCKET_ERROR:
             case ErrorCode.ERROR_CAS_AUDIO_RECV_ERROR:
             case ErrorCode.ERROR_CAS_AUDIO_SEND_ERROR:
-                errorDes="网络异常，对讲已关闭";
+                errorDes="Anomalie réseau, interphone fermé";
                 break;
             case ErrorCode.ERROR_INNER_STREAM_TIMEOUT:
-                errorDes="取流超时，刷新重试";
+                errorDes="Timeout du flux, actualiser et réessayer";
                 break;
-            case 110031://子账户或萤石用户没有权限
+            case 110031:// Sous-compte ou utilisateur EZVIZ sans autorisation
                 break;
             default:
                 errorDes = "" + errorInfo.errorCode;

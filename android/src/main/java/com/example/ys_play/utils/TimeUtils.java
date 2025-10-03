@@ -10,19 +10,19 @@ public class TimeUtils {
     public static String dateFormat_month = "MM-dd";
 
     /**
-     * 时间转换成字符串,默认为"yyyy-MM-dd HH:mm:ss"
+     * Convertir le temps en chaîne de caractères, par défaut "yyyy-MM-dd HH:mm:ss"
      *
-     * @param time 时间
+     * @param time temps
      */
     public static String dateToString(long time) {
         return dateToString(time, "yyyy-MM-dd HH:mm:ss");
     }
 
     /**
-     * 时间转换成字符串,指定格式
+     * Convertir le temps en chaîne de caractères, format spécifié
      *
-     * @param time   时间
-     * @param format 时间格式
+     * @param time   temps
+     * @param format format de temps
      */
     public static String dateToString(long time, String format) {
         Date date = new Date(time);
@@ -47,16 +47,16 @@ public class TimeUtils {
 
 
     /**
-     * 获取当前的时间戳
+     * Obtenir le timestamp actuel
      *
      * @return
      */
     public static long getTimeStame() {
-        //获取当前的毫秒值
+        // Obtenir la valeur en millisecondes actuelle
         long time = System.currentTimeMillis();
-        //将毫秒值转换为String类型数据
+        // Convertir la valeur en millisecondes en données de type String
         long time_stamp = time;
-        //返回出去
+        // Retourner
         return time_stamp;
     }
 }

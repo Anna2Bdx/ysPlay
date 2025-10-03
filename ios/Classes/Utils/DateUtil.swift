@@ -9,7 +9,7 @@ import Foundation
 
 class DateUtil {
     
-    ///获取当前时间戳
+    /// Obtenir le timestamp actuel
     public static func getCurrentTimeStamp() -> Int {
         let now = Date()
         let timeInterval:TimeInterval = now.timeIntervalSince1970

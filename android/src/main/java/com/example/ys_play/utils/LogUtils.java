@@ -5,7 +5,7 @@ import android.util.Log;
 import io.flutter.BuildConfig;
 
 public class LogUtils {
-    static String TAG =  "萤石LOG========>";
+    static String TAG =  "EZVIZ LOG========>";
 
     public static void d(String text){
         if(BuildConfig.DEBUG && text!=null){

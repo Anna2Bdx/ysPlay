@@ -33,8 +33,8 @@ class PanelView extends StatefulWidget {
 
 class _PanelViewState extends State<PanelView> {
   Offset p = Offset.zero;
-  late double innerRadius; // 内圆半径
-  late double outerRadius; // 外圆半径
+  late double innerRadius; // Rayon du cercle intérieur
+  late double outerRadius; // Rayon du cercle extérieur
 
   @override
   void initState() {

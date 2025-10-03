@@ -5,22 +5,23 @@ import 'package:ys_play/src/entity/ys_request_entity.dart';
 import 'entity/ys_response_entity.dart';
 
 class YsHttpApi {
-  /// 开始云台控制
+  /// Démarrer le contrôle PTZ
   static const String ptzStart =
-      "https://open.ys7.com/api/lapp/device/ptz/start";
+      "https://ieuopen.ezvizlife.com/api/lapp/device/ptz/start";
 
-  /// 关闭云台控制
-  static const String ptzStop = "https://open.ys7.com/api/lapp/device/ptz/stop";
+  /// Arrêter le contrôle PTZ
+  static const String ptzStop = "https://ieuopen.ezvizlife.com/api/lapp/device/ptz/stop";
 
-  /// 镜像翻转
+  /// Retournement miroir
   static const String ptzMirror =
-      "https://open.ys7.com/api/lapp/device/ptz/mirror";
+      "https://ieuopen.ezvizlife.com/api/lapp/device/ptz/mirror";
 
-  /// 设备能力集
+  /// Ensemble de capacités du périphérique
   static const String devCapacity =
-      "https://open.ys7.com/api/lapp/device/capacity";
+      "https://ieuopen.ezvizlife.com/api/lapp/device/capacity";
 
-  /// 开始云台控制
+
+  /// Démarrer le contrôle PTZ
   static Future<YsResponseEntity> devPtzStart({
     required String accessToken,
     required String deviceSerial,
@@ -43,18 +44,18 @@ class YsHttpApi {
             YsResponseEntity.fromJson(response.data);
         return responseData;
       } else {
-        // 失败
+        // Échec
         return YsResponseEntity.fromJson({
           "code": response.statusCode,
           "msg": response.statusMessage,
         });
       }
     } catch (e) {
-      throw ("请求错误:${e.toString()}");
+      throw ("Erreur de requête: ${e.toString()}");
     }
   }
 
-  /// 停止云台控制
+  /// Arrêter le contrôle PTZ
   static Future<YsResponseEntity> devPtzStop({
     required String accessToken,
     required String deviceSerial,
@@ -74,18 +75,18 @@ class YsHttpApi {
             YsResponseEntity.fromJson(response.data);
         return responseData;
       } else {
-        // 失败
+        // Échec
         return YsResponseEntity.fromJson({
           "code": response.statusCode,
           "msg": response.statusMessage,
         });
       }
     } catch (e) {
-      throw ("请求错误:${e.toString()}");
+      throw ("Erreur de requête: ${e.toString()}");
     }
   }
 
-  /// 镜像翻转
+  /// Retournement miroir
   static Future<YsResponseEntity> devPtzMirror(
       YsRequestEntity requestEntity) async {
     FormData formData = FormData.fromMap({
@@ -102,18 +103,18 @@ class YsHttpApi {
             YsResponseEntity.fromJson(response.data);
         return responseData;
       } else {
-        // 失败
+        // Échec
         return YsResponseEntity.fromJson({
           "code": response.statusCode,
           "msg": response.statusMessage,
         });
       }
     } catch (e) {
-      throw ("请求错误:${e.toString()}");
+      throw ("Erreur de requête: ${e.toString()}");
     }
   }
 
-  /// 设备能力集
+  /// Ensemble de capacités du périphérique
   static Future<CapacityResponseEntity> getDevCapacity({
     required String accessToken,
     required String deviceSerial,
@@ -130,14 +131,14 @@ class YsHttpApi {
             CapacityResponseEntity.fromJson(response.data);
         return responseData;
       } else {
-        // 失败
+        // Échec
         return CapacityResponseEntity.fromJson({
           "code": response.statusCode,
           "msg": response.statusMessage,
         });
       }
     } catch (e) {
-      throw ("请求错误:${e.toString()}");
+      throw ("Erreur de requête: ${e.toString()}");
     }
   }
 }

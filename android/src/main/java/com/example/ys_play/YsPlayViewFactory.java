@@ -14,14 +14,14 @@ public class YsPlayViewFactory extends PlatformViewFactory {
 
     private final OnPlatformViewCreated onViewCreated;
 
-    ///应用启动时，通过registerViewFactory方法调用1次
+    /// Au démarrage de l'application, appelé 1 fois via la méthode registerViewFactory
     public YsPlayViewFactory(OnPlatformViewCreated onViewCreated) {
         super(StandardMessageCodec.INSTANCE);
         this.onViewCreated = onViewCreated;
     }
 
-    /// 创建视图
-    /// flutter端每次调用androidView时，都会执行1次
+    /// Créer la vue
+    /// Exécuté 1 fois à chaque appel d'androidView côté Flutter
     @NonNull
     @Override
     public PlatformView create(Context context, int id, Object args) {
