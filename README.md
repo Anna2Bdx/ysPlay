@@ -1,32 +1,33 @@
 # ysPlay
 
-Flutter萤石云直播插件，支持Android和IOS
+Plugin Flutter pour streaming en direct EZVIZ Cloud, compatible Android et iOS
 
-## 支持
-1.账号对接（授权登录）  
-2.直播(可设置直播分辨率)  
-3.回放  
-4.直播、回放边播边录  
-5.直播、回放边播边截屏  
-6.云台控制  
-7.配网  
-8.对讲(包含半双工对讲和全双工对讲)  
+## Fonctionnalités
+1. Intégration de compte (connexion autorisée)  
+2. Streaming en direct (avec réglage de résolution)  
+3. Lecture différée  
+4. Enregistrement pendant le streaming direct et la lecture différée  
+5. Capture d'écran pendant le streaming direct et la lecture différée  
+6. Contrôle PTZ  
+7. Configuration réseau  
+8. Interphone (half-duplex et full-duplex)  
 
-## 准备工作
-集成之前，最好读一下[官方文档](http://open.ys7.com/help/36).
+## Préparation
+Avant l'intégration, il est recommandé de lire la [documentation officielle](http://open.ys7.com/help/36).
 
-## 安装
+## Installation
     dependencies: 
         ys_play: ^0.0.6
 
-## 工程配置
-### Android端
-在 AndroidMainfest.xml 文件中添加：
+## Configuration du projet
+### Côté Android  
+Ajouter dans le fichier AndroidMainfest.xml :
 ```       
-<!-- 基础功能所需权限 -->
+```       
+<!-- Permissions requises pour les fonctionnalités de base -->
 <uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.READ_PHONE_STATE" />
-<!-- 配网所需权限 -->
+<!-- Permissions requises pour la configuration réseau -->
 <uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
 <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
@@ -34,19 +35,20 @@ Flutter萤石云直播插件，支持Android和IOS
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
-<!-- 读取权限 选择本地相册-->
+<!-- Permission de lecture - sélection de l'album local -->
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-<!-- 存入权限 需要把拍摄的照片或视频存入-->
+<!-- Permission d'écriture - stockage des photos ou vidéos capturées -->
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 <uses-permission android:name="android.permission.WAKE_LOCK"/>
-<!-- 网络定位 -->
+<!-- Géolocalisation réseau -->
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-<!-- 麦克风权限-->
+<!-- Permissions microphone -->
 <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+```
 ```       
 
-在项目app目录下添加:
+Ajouter dans le répertoire app du projet :
 
     defaultConfig {
        ...
@@ -61,12 +63,12 @@ Flutter萤石云直播插件，支持Android和IOS
         }
     }
 
-代码混淆:
+Obfuscation du code :
 
-    #========SDK对外接口=======#
+    #========Interface externe du SDK=======#
     -keep class com.ezviz.opensdk.** { *;}
 
-    #========以下是hik二方库=======#
+    #========Bibliothèques HIK suivantes=======#
     -dontwarn com.ezviz.**
     -keep class com.ezviz.** { *;}
 
@@ -114,9 +116,9 @@ Flutter萤石云直播插件，支持Android和IOS
 
     -dontwarn org.MediaPlayer.PlayM4.**
     -keep class org.MediaPlayer.PlayM4.** { *;}
-    #========以上是hik二方库=======#
+    #========Fin des bibliothèques HIK=======#
 
-    #========以下是第三方开源库=======#
+    #========Bibliothèques open source tierces suivantes=======#
     # JNA
     -dontwarn com.sun.jna.**
     -keep class com.sun.jna.** { *;}
@@ -136,54 +138,52 @@ Flutter萤石云直播插件，支持Android和IOS
     -dontwarn org.codehaus.mojo.animal_sniffer.*
     # OkHttp platform used only on JVM and when Conscrypt dependency is available.
     -dontwarn okhttp3.internal.platform.ConscryptPlatform
-    # 必须额外加的，否则编译无法通过
+    # Doit être ajouté, sinon la compilation échouera
     -dontwarn okio.**
-    #========以上是第三方开源库=======#
+    #========Fin des bibliothèques open source tierces=======#
 
 
-### IOS端
-## 在info.plist中添加:  
+### Côté iOS
+## Ajouter dans info.plist :  
 
-1.相册权限： 如果需要使用开放平台播放器录像和截图并保存的功能，就需要配置相册权限。   
+1. Permission d'accès aux photos : Si vous devez utiliser les fonctions d'enregistrement et de capture d'écran du lecteur de la plateforme ouverte avec sauvegarde, vous devez configurer les permissions d'accès aux photos.   
 ```              
 <key>NSPhotoLibraryAddUsageDescription</key>  
-<string>$(PRODUCT_NAME)需要使用手机相册</string>  
+<string>$(PRODUCT_NAME) doit accéder à l'album photo</string>  
 <key>NSPhotoLibraryUsageDescription</key>  
-<string>$(PRODUCT_NAME)需要使用手机相册</string>  
+<string>$(PRODUCT_NAME) doit accéder à l'album photo</string>  
 ```
 
-2.麦克风权限： 如果需要使用设备对讲功能，就需要配置麦克风权限。务必在发起对讲前向iOS系统申请麦克风权限，否则将导致对讲异常。        
+2. Permission microphone : Si vous devez utiliser la fonction d'interphone de l'appareil, vous devez configurer les permissions microphone. Il est impératif de demander les permissions microphone au système iOS avant d'initier l'interphone, sinon cela causera des dysfonctionnements.        
 ```
 <key>NSMicrophoneUsageDescription</key>    
-<string>$(PRODUCT_NAME)需要使用手机麦克风</string>
+<string>$(PRODUCT_NAME) doit accéder au microphone</string>
 ```
 
-3.摄像头权限： 如果需要仿照demo实现扫码添加设备功能，就需要配置摄像头权限。 
+3. Permission caméra : Si vous devez implémenter la fonction de scan de code pour ajouter des appareils comme dans la démo, vous devez configurer les permissions caméra. 
 ```
 <key>NSCameraUsageDescription</key>    
-<string>$(PRODUCT_NAME)需要使用手机照相机</string>
+<string>$(PRODUCT_NAME) doit accéder à la caméra</string>
 ```
 
-4.配网权限: 如果需要使用萤石云设备入网配置，就需要配置配网权限  
+4. Permissions de configuration réseau : Si vous devez utiliser la configuration réseau des appareils EZVIZ Cloud, vous devez configurer les permissions de configuration réseau  
  ```       
 <key>NSLocalNetworkUsageDescription</key>  
-<string>$(PRODUCT_NAME)需要使用本地网络权限用于wifi配网</string>  
+<string>$(PRODUCT_NAME) doit accéder au réseau local pour la configuration WiFi</string>  
 <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>  
-<string>$(PRODUCT_NAME)需要使用定位权限用于wifi配网</string>  
+<string>$(PRODUCT_NAME) doit accéder à la localisation pour la configuration WiFi</string>  
 <key>NSLocationAlwaysUsageDescription</key>
-<string>$(PRODUCT_NAME)需要使用定位权限用于wifi配网</string>  
+<string>$(PRODUCT_NAME) doit accéder à la localisation pour la configuration WiFi</string>  
 <key>NSLocationWhenInUseUsageDescription</key>  
-<string>$(PRODUCT_NAME)需要使用定位权限用于wifi配网</string>  
+<string>$(PRODUCT_NAME) doit accéder à la localisation pour la configuration WiFi</string>  
 ```
 
-## 在xcode中配置
-在xcode -> Runner -> Target -> Target-Signing & Capabilities中，添加以下2项能力:
-1.Access WiFi Information(获取手机连接的WiFi名，配网需要);
-2.Hotspot Configuation(连接指定WiFi，配网需要).
-注意：上述2项能力，同时需要在appstore官网证书上添加相关能力。
+## Configuration dans Xcode
+Dans Xcode -> Runner -> Target -> Target-Signing & Capabilities, ajouter les 2 capacités suivantes :
+1. Access WiFi Information (obtenir le nom du WiFi connecté, nécessaire pour la configuration réseau) ;
+2. Hotspot Configuration (connexion à un WiFi spécifique, nécessaire pour la configuration réseau).
+Note : Ces 2 capacités doivent également être ajoutées dans les certificats sur le site officiel de l'App Store.
 
-## 使用方式
-具体请见example中的功能，里面有详细注释。
 
    
 	
