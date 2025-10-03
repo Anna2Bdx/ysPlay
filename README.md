@@ -22,8 +22,7 @@ Avant l'intégration, il est recommandé de lire la [documentation officielle](h
 ## Configuration du projet
 ### Côté Android  
 Ajouter dans le fichier AndroidMainfest.xml :
-```       
-```       
+```          
 <!-- Permissions requises pour les fonctionnalités de base -->
 <uses-permission android:name="android.permission.INTERNET" />
 <uses-permission android:name="android.permission.READ_PHONE_STATE" />
@@ -45,7 +44,6 @@ Ajouter dans le fichier AndroidMainfest.xml :
 <!-- Permissions microphone -->
 <uses-permission android:name="android.permission.RECORD_AUDIO"/>
 <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
-```
 ```       
 
 Ajouter dans le répertoire app du projet :
