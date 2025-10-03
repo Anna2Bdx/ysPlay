@@ -1,28 +1,9 @@
+
 //
-//  SwiftYs    let TAG = "SDK EZVIZ=======>"
-    
-    var playerView:UIView? // Vue de lecture
- 
-    var pwResult:FlutterBasicMessageChannel? // Canal de configura        } else if call.method == "pause_play_back"{
-            /// Pause de la lecture
-            if ezPlayer == nil {
-                result(false)
-                return
-            }
-            let bool = ezPlayer!.pausePlayback()
-            print("\(TAG)Pause de la lecture \(bool ? "réussie" : "échouée")")eau
-    var ysResult:FlutterBasicMessageChannel? // Canal direct et lecture
-    
-    var ezPlayer:EZPlayer? // Lecteur direct et lecture
-    var _talkPlayer:EZPlayer? // Interphone
-    
-    private var supportTalk:Int = 0 // Capacité d'interphone 0 non supporté 1 full duplex 3 half duplex
-    private var isPhone2Dev:Int = 1 // 1 téléphone parle périphérique écoute 0 téléphone écoute périphérique parle
-    private var videoPath:String? // Adresse de sauvegarde vidéoift
+//  SwiftYsPlayPlugin.swift
 //  ys_play
 //
 //  Created by 潇洒的然然 on 2022/9/6.
-
 import Flutter
 import UIKit
 import EZOpenSDKFramework
@@ -31,21 +12,20 @@ import Photos
 public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
     
 
-    let TAG = "荧石SDK=======>"
+    let TAG = "EzVizSDK=======>"
     
-    var playerView:UIView? // 播放视图
- 
-    var pwResult:FlutterBasicMessageChannel? // 配网渠道
-    var ysResult:FlutterBasicMessageChannel? // 直播、回放渠道
-    
-    var ezPlayer:EZPlayer? // 直播、回放播放器
-    var _talkPlayer:EZPlayer? //对讲器
-    
-    private var supportTalk:Int = 0 //对讲能力 0不支持 1全双工 3半双工
-    private var isPhone2Dev:Int = 1 //1手机端说设备端听 0手机端听设备端说
-    private var videoPath:String? //视频保存地址
-    
+    var playerView:UIView? // Vue de lecture
 
+    var pwResult:FlutterBasicMessageChannel? // Canal de configuration réseau
+    var ysResult:FlutterBasicMessageChannel? // Canal direct et lecture
+
+    var ezPlayer:EZPlayer? // Lecteur direct et lecture
+    var _talkPlayer:EZPlayer? // Interphone
+
+    private var supportTalk:Int = 0 // Capacité d'interphone 0 non supporté 1 full duplex 3 half duplex
+    private var isPhone2Dev:Int = 1 // 1 téléphone parle périphérique écoute 0 téléphone écoute périphérique parle
+    private var videoPath:String? // Adresse de sauvegarde vidéo
+    
     // variables utilisées pour piloter finement le PanTiltZoom
     private let ptzQueue = DispatchQueue(label: "fr.skywave.maison.ptz.queue")  // série
     private var ptzEpoch: Int = 0                                               // token d'intention
@@ -109,7 +89,7 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
             } else {
                 result(false)
             }
-                } else if call.method == "set_access_token" {
+        } else if call.method == "set_access_token" {
             /// Autorisation de connexion
             let data:Optional<Dictionary> = call.arguments as? Dictionary<String, String>
             if data != nil && data!["accessToken"] != nil {
@@ -656,7 +636,88 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
         }
     }
     
-   
+   private func ptzSwitch(deviceSerial: String,
+                            cameraNo: Int,
+                            newCmd: EZPTZCommand?,   // nil => STOP
+                            speed: Int,              // 0..2 (classique) ou 0..7 (Mix)
+                            flutterResult: @escaping FlutterResult) {
+
+       // Nouvelle intention -> nouveau token
+       ptzEpoch &+= 1
+       let myEpoch = ptzEpoch
+
+       ptzQueue.async { [weak self] in
+         guard let self = self else { return }
+
+         // 1) Si une direction est active et change (ou STOP), on envoie d'abord un STOP
+         if let prev = self.currentCmd, (newCmd == nil || newCmd != prev) {
+           _ = self.controlPTZSync(deviceSerial: deviceSerial,
+                                   cameraNo: cameraNo,
+                                   cmd: prev,
+                                   action: .stop,
+                                   speed: 0,
+                                   timeout: 3.0)
+           // petite barrière pour laisser l'ordre s'appliquer côté device
+           usleep(120_000) // 120 ms
+         }
+
+         // Intention périmée ?
+         guard self.ptzEpoch == myEpoch else { flutterResult(false); return }
+
+         // 2) Démarrer la nouvelle direction si demandé
+         if let dir = newCmd {
+           // Vérif AVANT envoi (cas tap<600ms)
+           guard self.ptzEpoch == myEpoch else { flutterResult(false); return }
+
+           let okStart = self.controlPTZSync(deviceSerial: deviceSerial,
+                                             cameraNo: cameraNo,
+                                             cmd: dir,
+                                             action: .start,
+                                             speed: speed,
+                                             timeout: 5.0)
+           // Pendant le START, l'intention a changé ? -> STOP immédiat pour annuler
+           if self.ptzEpoch != myEpoch {
+             _ = self.controlPTZSync(deviceSerial: deviceSerial,
+                                     cameraNo: cameraNo,
+                                     cmd: dir,
+                                     action: .stop,
+                                     speed: 0,
+                                     timeout: 3.0)
+             flutterResult(false)
+             return
+           }
+
+           if okStart { self.currentCmd = dir }
+           flutterResult(okStart)
+         } else {
+           // Intention = STOP
+           self.currentCmd = nil
+           flutterResult(true)
+         }
+       }
+     }
+
+     /// Appelle controlPTZMix si dispo (vitesse fine 0..7), sinon fallback controlPTZ (0..2).
+     /// On l’exécute de façon "synchrone" sur ptzQueue via un sémaphore (pas le main thread).
+     private func controlPTZSync(deviceSerial: String,
+                                 cameraNo: Int,
+                                 cmd: EZPTZCommand,
+                                 action: EZPTZAction,
+                                 speed: Int,
+                                 timeout: TimeInterval) -> Bool {
+       let sem = DispatchSemaphore(value: 1)
+       _ = sem.wait(timeout: .now()) // prendre le jeton
+       var ok = false
+
+       EZGlobalSDK.controlPTZ(deviceSerial, cameraNo: cameraNo, command: cmd, action: action, speed: min(speed, 2)) { error in
+                  ok = (error == nil)
+                  sem.signal()
+                }
+
+       _ = sem.wait(timeout: .now() + timeout)
+       sem.signal()
+       return ok
+     }
 
 
 }
