@@ -1,6 +1,10 @@
 # ysPlay
 
-Plugin Flutter pour streaming en direct EZVIZ Cloud, compatible Android et iOS
+Plugin Flutter pour streaming en direct EZVIZ Cloud, compatible Android et iOS.
+
+> 🧩 **Contexte @home** — ce repo est un **fork** de [`shijia2118/ysPlay`](https://github.com/shijia2118/ysPlay) (plugin `ys_play`, package natif EZVIZ / 萤石云). Il est utilisé par l'app **[`atHome`](https://github.com/Anna2Bdx/atHome)** pour **afficher les flux des caméras EZVIZ** (section *Caméras*) — player + contrôle PTZ. Consommé en **git dependency** (`Anna2Bdx/ysPlay`), **pas** la version pub.dev. L'orchestration (token EZVIZ, device id) est faite par `EzVizController` dans [`maison_core`](https://github.com/Anna2Bdx/maison_core) ; ce plugin ne gère **pas** l'OAuth (il reçoit un `accessToken`).
+>
+> Divergences vs l'upstream : *(à confirmer — montées de version du SDK EZVIZ, patches d'intégration)*.
 
 ## Fonctionnalités
 1. Intégration de compte (connexion autorisée)  
@@ -11,6 +15,20 @@ Plugin Flutter pour streaming en direct EZVIZ Cloud, compatible Android et iOS
 6. Contrôle PTZ  
 7. Configuration réseau  
 8. Interphone (half-duplex et full-duplex)  
+
+## API publique (côté Dart)
+
+Tout est ré-exporté par `package:ys_play/ys_play.dart` (library `ys`).
+
+| Élément | Type | Rôle |
+|---|---|---|
+| `YsPlayView` | `Widget` | Vue native du **player** (rend le flux caméra) — ce qu'`atHome` embarque. |
+| `YsPlay` | API statique (`MethodChannel`) | Contrôle : `initSdk` / `setAccessToken` · **live** (`startRealPlay`/`stopRealPlay`, son) · **différé** (`startPlayback`/`pause`/`resume`/`stop`) · **capture/record** (`capturePicture`, `start/stopRecordWithFile`) · **qualité** (`setVideoLevel`) · **PTZ** (`startPTZ`/`stopPTZ`) · **interphone** (`onResultListener`/`peiwangResultListener`) · `dispose`. |
+| `YsHttpApi` | API statique HTTP | Appels directs à l'**open API EZVIZ** (`ieuopen.ezvizlife.com`) : `devPtzStart/Stop/Mirror`, `getDevCapacity`. |
+| `src/entity/*` | modèles | `YsRequestEntity`, `YsViewRequestEntity`, `YsResponseEntity`, `YsRecordFile`, `CapacityResponseEntity`, `YsPwResult`, `YsPlayerStatus`, `EzConstants`. |
+| `src/panel/panel_view` | `Widget` | Panneau de contrôle **PTZ** (pad directionnel, `sector_shape`). |
+
+> Côté natif : `MethodChannel("com.example.ys_play")` + `BasicMessageChannel` pour le statut du player et le résultat de la configuration réseau (配网). L'`accessToken` EZVIZ provient du backend @home (cf. `EzVizController`).
 
 ## Préparation
 Avant l'intégration, il est recommandé de lire la [documentation officielle](http://open.ys7.com/help/36).
@@ -181,6 +199,17 @@ Dans Xcode -> Runner -> Target -> Target-Signing & Capabilities, ajouter les 2 c
 1. Access WiFi Information (obtenir le nom du WiFi connecté, nécessaire pour la configuration réseau) ;
 2. Hotspot Configuration (connexion à un WiFi spécifique, nécessaire pour la configuration réseau).
 Note : Ces 2 capacités doivent également être ajoutées dans les certificats sur le site officiel de l'App Store.
+
+---
+
+## Repos liés
+
+| Repo | Rôle |
+|---|---|
+| [`atHome`](https://github.com/Anna2Bdx/atHome) | l'app qui consomme ce plugin (section Caméras) |
+| [`maison_core`](https://github.com/Anna2Bdx/maison_core) | `EzVizController` (orchestration token / device EZVIZ) |
+| [`shijia2118/ysPlay`](https://github.com/shijia2118/ysPlay) | le projet **upstream** forké |
+| [`home-automation-docs`](https://github.com/Anna2Bdx/home-automation-docs) | doc centrale de la plateforme @home |
 
 
    
