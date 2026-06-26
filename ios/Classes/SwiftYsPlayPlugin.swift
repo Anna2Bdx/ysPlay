@@ -83,7 +83,14 @@ public class SwiftYsPlayPlugin: NSObject, FlutterPlugin,EZPlayerDelegate{
             /// Initialiser le SDK EZVIZ
             let data:Optional<Dictionary> = call.arguments as? Dictionary<String, String>
             if data != nil && data!["appKey"] != nil {
-                let isSuccess:Bool = EZGlobalSDK.initLib(withAppKey: data!["appKey"]!)
+                let isSuccess:Bool
+                if let apiUrl = data!["apiUrl"], let authUrl = data!["authUrl"], !apiUrl.isEmpty, !authUrl.isEmpty {
+                    // Overseas : on FIXE le serveur régional (apiUrl/authUrl). Sans ça, EZGlobalSDK
+                    // part sur son serveur Chine/global par défaut et rejette un token EU → 10002.
+                    isSuccess = EZGlobalSDK.initLib(withAppKey: data!["appKey"]!, url: apiUrl, authUrl: authUrl)
+                } else {
+                    isSuccess = EZGlobalSDK.initLib(withAppKey: data!["appKey"]!)
+                }
                 print("\(TAG) Initialisation SDK \(isSuccess ? "réussie" : "échouée")")
                 result(isSuccess)
             } else {

@@ -67,9 +67,18 @@ class YsPlay {
   }
 
   /// Initialiser le SDK EZVIZ
-  /// Seul paramètre obligatoire :`appKey`. Généré après création de l'application sur la plateforme officielle du SDK EZVIZ.
-  static Future<bool> initSdk(String appKey) async {
-    bool result = await _channel.invokeMethod("init_sdk", {'appKey': appKey});
+  /// `appKey` obligatoire (généré sur la plateforme officielle EZVIZ).
+  /// `apiUrl`/`authUrl` = domaines régionaux (init "overseas") : à fournir hors-Chine, sinon
+  /// le SDK natif part sur son serveur par défaut (Chine/global) et rejette un token régional
+  /// (ex. EU) avec le code 10002. Quand les deux sont fournis, le natif bascule sur l'init
+  /// overseas (iOS `initLibWithAppKey:url:authUrl:`) / `setServerUrl` (Android).
+  static Future<bool> initSdk(String appKey, {String? apiUrl, String? authUrl}) async {
+    final Map<String, String> args = {'appKey': appKey};
+    if (apiUrl != null && apiUrl.isNotEmpty && authUrl != null && authUrl.isNotEmpty) {
+      args['apiUrl'] = apiUrl;
+      args['authUrl'] = authUrl;
+    }
+    bool result = await _channel.invokeMethod("init_sdk", args);
     return result;
   }
 

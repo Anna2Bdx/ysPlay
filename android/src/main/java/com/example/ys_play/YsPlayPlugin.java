@@ -270,6 +270,14 @@ public class YsPlayPlugin implements FlutterPlugin, MethodChannel.MethodCallHand
                 EZGlobalSDK.showSDKLog(BuildConfig.DEBUG);
                 String appKey = call.argument("appKey");
                 boolean initResult = EZGlobalSDK.initLib(this.application, appKey);
+                // Overseas : fixer le serveur régional (apiUrl/authUrl) après initLib et AVANT le
+                // token, sinon EZGlobalSDK utilise son serveur Chine/global par défaut → 10002
+                // avec un token EU.
+                String apiUrl = call.argument("apiUrl");
+                String authUrl = call.argument("authUrl");
+                if (initResult && apiUrl != null && !apiUrl.isEmpty() && authUrl != null && !authUrl.isEmpty()) {
+                    EZGlobalSDK.getInstance().setServerUrl(apiUrl, authUrl);
+                }
                 LogUtils.d("Initialisation du SDK EZVIZ "+(initResult?"réussie":"échouée"));
                 result.success(initResult);
                 break;
