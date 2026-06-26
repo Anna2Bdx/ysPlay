@@ -14,7 +14,7 @@ A new Flutter project.
   s.author           = { 'Your Company' => 'email@example.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
-  s.dependency 'EZOpenSDK' ,'5.25.4'
+  s.dependency 'EZOpenSDK' ,'5.28.4'
   s.public_header_files = 'Classes/**/*.h'
   s.dependency 'Flutter'
   s.platform = :ios, '11.0'
